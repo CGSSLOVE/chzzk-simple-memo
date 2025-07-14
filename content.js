@@ -37,11 +37,10 @@ function applyMemoToStreamer(streamerNode) {
 
   // 메모 수정/저장 로직
   memoContainer.addEventListener('click', (event) => {
-    // ★★★★★★★★★★★★★★★★★★★★★
-    // 이 두 줄이 추가된 핵심 부분입니다!
+
     event.preventDefault();
     event.stopPropagation();
-    // ★★★★★★★★★★★★★★★★★★★★★
+    
     
     // 이미 수정 중이면 아무것도 안 함
     if (memoContainer.querySelector('input')) return;
