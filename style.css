@@ -1,0 +1,31 @@
+.streamer-memo-container {
+  margin-left: 8px;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.streamer-memo {
+  color: #a0a0a0; /* 회색 텍스트 */
+  background-color: #3a3a3a; /* 어두운 배경 */
+  padding: 2px 6px;
+  border-radius: 4px;
+  transition: background-color 0.2s;
+}
+
+.streamer-memo:hover {
+  background-color: #505050; /* 호버 시 배경색 변경 */
+}
+
+.memo-input {
+  padding: 2px 6px;
+  border-radius: 4px;
+  border: 1px solid #4CAF50; /* 필터 테마색 */
+  background-color: #222;
+  color: #f0f0f0;
+  font-size: 13px;
+  width: 120px; /* 입력창 너비 */
+}
+
+.memo-input:focus {
+  outline: none;
+}
