@@ -37,16 +37,14 @@ function applyMemoToStreamer(streamerNode) {
 
   // 메모 수정/저장 로직
   memoContainer.addEventListener('click', (event) => {
+    event.preventDefault();  // 링크 이동 등 기본 동작을 막습니다.
+    event.stopPropagation(); // 클릭 이벤트가 부모에게 전달되는 것을 막습니다.
 
-    event.preventDefault();
-    event.stopPropagation();
-    
-    
     // 이미 수정 중이면 아무것도 안 함
     if (memoContainer.querySelector('input')) return;
 
     const currentMemo = streamerMemos[streamerName] || '';
-    
+
     // 텍스트를 입력창으로 변경
     memoContainer.innerHTML = `<input type="text" value="${currentMemo}" class="memo-input" placeholder="메모를 입력해주세요..">`;
     const input = memoContainer.querySelector('input');
@@ -64,7 +62,7 @@ function applyMemoToStreamer(streamerNode) {
       }
     });
   });
-  
+
   memoContainer.appendChild(memoSpan);
   // 닉네임 요소 바로 뒤에 메모 컨테이너 삽입
   nicknameElement.insertAdjacentElement('afterend', memoContainer);
@@ -78,7 +76,7 @@ function saveMemo(streamerName, newMemo, container) {
     // 메모 내용이 비어있으면 해당 메모 삭제
     delete streamerMemos[streamerName];
   }
-  
+
   // 변경된 메모 객체를 저장소에 저장
   chrome.storage.local.set({ streamerMemos: streamerMemos }, () => {
     // UI를 다시 텍스트 형태로 복원
@@ -86,7 +84,7 @@ function saveMemo(streamerName, newMemo, container) {
     memoSpan.className = 'streamer-memo';
     memoSpan.textContent = streamerMemos[streamerName] || '[메모]';
     memoSpan.title = '클릭해서 메모 수정';
-    
+
     container.innerHTML = ''; // 기존 input 삭제
     container.appendChild(memoSpan);
   });
