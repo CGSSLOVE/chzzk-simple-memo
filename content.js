@@ -8,14 +8,16 @@ const LIVE_INFO_PARENT_SELECTOR = 'div.video_information_row__HrQ0z';
 async function main() {
   console.log("[치지직 메모] 메인 함수 실행 시작!");
   const result = await new Promise(resolve => {
-    chrome.storage.local.get(['memos', 'streamerMemos'], resolve);
+    // 크롬 버전: chrome.storage 사용
+    chrome.storage.local.get(['memos', 'streamerMemos'], resolve); 
   });
   
   streamerMemos = result.memos || {}; 
   if (Object.keys(streamerMemos).length === 0 && result.streamerMemos) {
       streamerMemos = result.streamerMemos;
       await new Promise(resolve => {
-          chrome.storage.local.set({memos: streamerMemos, streamerMemos: undefined}, resolve);
+          // 크롬 버전: chrome.storage 사용
+          chrome.storage.local.set({memos: streamerMemos, streamerMemos: undefined}, resolve); 
       });
       console.log("[치지직 메모] 기존 메모 데이터 'streamerMemos'에서 'memos'로 마이그레이션 완료.");
   }
@@ -25,14 +27,12 @@ async function main() {
 
   let lastUrl = window.location.href;
   const urlChangeObserver = new MutationObserver(() => {
-      // URL 변경 감지: 지연 없이 바로 확인하여 더 빠르게 반응
       if (window.location.href !== lastUrl) {
-          console.log("[치지직 메모] URL 변경 감지 (확정):", lastUrl, "->", window.location.href);
+          console.log("[치지직 메모] URL 변경 감지:", lastUrl, "->", window.location.href);
           lastUrl = window.location.href;
           checkAndApplyMemoByUrl();
       }
   });
-  // attributeFilter 제거하여 모든 속성 변화를 감지 (URL 변화 감지 강화)
   urlChangeObserver.observe(document.body, { subtree: true, childList: true, attributes: true }); 
 }
 
@@ -91,7 +91,6 @@ function stopListPagesObservation() {
     }
 }
 
-
 function applyMemoToStreamerInList(streamerNode) {
   const nicknameElement = streamerNode.querySelector(LIST_NICKNAME_SELECTOR);
 
@@ -133,8 +132,8 @@ function applyMemoToStreamerInLivePage() {
     const titleElement = document.querySelector(LIVE_TITLE_SELECTOR);
     const streamerNameElement = document.querySelector(LIVE_STREAMER_NAME_TEXT_SELECTOR); 
 
-    // 중복 방지 로직 강화: titleElement가 존재하고, 그 자식 중에 메모 컨테이너가 이미 있는지 확인
     if (titleElement && titleElement.querySelector('.streamer-memo-container')) {
+        console.log("[치지직 메모] 이미 메모 컨테이너 존재 (시청 페이지), 중복 방지.");
         return true; 
     }
 
@@ -192,6 +191,7 @@ async function handleMemoClick(streamerName, memoContainer) {
   input.addEventListener('blur', saveAndRestore);
   input.addEventListener('keydown', (e) => {
     if (e.key === 'Enter') {
+      e.preventDefault(); 
       saveAndRestore();
     }
   });
@@ -205,6 +205,7 @@ async function saveMemo(streamerName, newMemo, container) {
     delete streamerMemos[streamerName];
   }
 
+  // 크롬 버전: chrome.storage 사용
   await new Promise(resolve => {
     chrome.storage.local.set({memos: streamerMemos}, resolve); 
   });
@@ -230,13 +231,12 @@ function startObservingLivePage() {
     const maxAttempts = 60; 
     const intervalTime = 500; 
 
-    // MutationObserver 감지 시 setInterval 리셋 함수
     const resetInterval = () => {
         if (livePageIntervalId) {
             clearInterval(livePageIntervalId);
             livePageIntervalId = null;
         }
-        attempts = 0; // 시도 횟수 리셋
+        attempts = 0; 
         livePageIntervalId = setInterval(() => {
             console.log(`[치지직 메모] 시청 페이지 메모 주기적 적용 시도 중... (횟수: ${attempts + 1})`);
             if (applyMemoToStreamerInLivePage()) { 
@@ -259,20 +259,13 @@ function startObservingLivePage() {
     console.log("[치지직 메모] 라이브 페이지 감시 대상:", observeTarget === document.body ? "body" : LIVE_INFO_PARENT_SELECTOR);
 
     livePageObserver = new MutationObserver((mutations) => {
-        // MutationObserver 감지 시 setInterval 리셋. 
-        // 이미 메모가 있다면 불필요한 재시작 방지 (중복 메모의 핵심 해결)
         if (!document.querySelector(LIVE_TITLE_SELECTOR + ' + .streamer-memo-container')) {
             console.log("[치지직 메모] MutationObserver 감지됨 (시청 페이지 변화), 주기적 체크 재시작.");
             resetInterval(); 
-        } else {
-            // 메모가 이미 삽입되어 있는 경우에도 여전히 감지되는 변화는 무시 (불필요한 로깅 줄임)
-            // console.log("[치지직 메모] MutationObserver 감지됨 (메모 이미 존재).");
         }
     });
-    // 감시 옵션: childList와 attributes만 감시, subtree는 false
-    livePageObserver.observe(observeTarget, { childList: true, subtree: false, attributes: true, attributeFilter: ['class', 'style', 'id'] }); // ID 속성도 추가 감시
+    livePageObserver.observe(observeTarget, { childList: true, subtree: false, attributes: true, attributeFilter: ['class', 'style', 'id'] });
 
-    // 초기 인터벌 시작
     resetInterval(); 
 }
 
