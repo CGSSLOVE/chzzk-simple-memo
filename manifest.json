@@ -1,0 +1,29 @@
+{
+  "manifest_version": 3,
+  "name": "치지직 스트리머 메모",
+  "version": "1.2",
+  "description": "스트리머 닉네임과 방송 제목 옆에 원하는 정보를 메모하고 관리합니다.",
+
+  "permissions": [
+    "storage"
+  ],
+  "host_permissions": [
+    "https://chzzk.naver.com/*"
+  ],
+
+  "content_scripts": [
+    {
+      "matches": [
+        "https://chzzk.naver.com/lives/*", // 라이브 방송 시청 페이지
+        "https://chzzk.naver.com/video/*",  // VOD 시청 페이지
+        "https://chzzk.naver.com/*"         // 기존 전체 페이지 (라이브 목록 등)
+      ],
+      "js": [
+        "content.js"
+      ],
+      "css": [
+        "style.css"
+      ]
+    }
+  ]
+}
