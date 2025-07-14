@@ -25,13 +25,15 @@ async function main() {
 
   let lastUrl = window.location.href;
   const urlChangeObserver = new MutationObserver(() => {
+      // URL 변경 감지: 지연 없이 바로 확인하여 더 빠르게 반응
       if (window.location.href !== lastUrl) {
-          console.log("[치지직 메모] URL 변경 감지:", lastUrl, "->", window.location.href);
+          console.log("[치지직 메모] URL 변경 감지 (확정):", lastUrl, "->", window.location.href);
           lastUrl = window.location.href;
           checkAndApplyMemoByUrl();
       }
   });
-  urlChangeObserver.observe(document.body, { subtree: true, childList: true, attributes: true, attributeFilter: ['href', 'title'] }); 
+  // attributeFilter 제거하여 모든 속성 변화를 감지 (URL 변화 감지 강화)
+  urlChangeObserver.observe(document.body, { subtree: true, childList: true, attributes: true }); 
 }
 
 function checkAndApplyMemoByUrl() {
@@ -131,8 +133,8 @@ function applyMemoToStreamerInLivePage() {
     const titleElement = document.querySelector(LIVE_TITLE_SELECTOR);
     const streamerNameElement = document.querySelector(LIVE_STREAMER_NAME_TEXT_SELECTOR); 
 
+    // 중복 방지 로직 강화: titleElement가 존재하고, 그 자식 중에 메모 컨테이너가 이미 있는지 확인
     if (titleElement && titleElement.querySelector('.streamer-memo-container')) {
-        console.log("[치지직 메모] 이미 메모 컨테이너 존재 (시청 페이지), 중복 방지.");
         return true; 
     }
 
@@ -257,15 +259,21 @@ function startObservingLivePage() {
     console.log("[치지직 메모] 라이브 페이지 감시 대상:", observeTarget === document.body ? "body" : LIVE_INFO_PARENT_SELECTOR);
 
     livePageObserver = new MutationObserver((mutations) => {
-        // MutationObserver 감지 시 바로 setInterval 리셋
-        console.log("[치지직 메모] MutationObserver 감지됨 (시청 페이지 변화), 주기적 체크 재시작.");
-        resetInterval(); // 옵저버가 감지하면 인터벌을 재설정
+        // MutationObserver 감지 시 setInterval 리셋. 
+        // 이미 메모가 있다면 불필요한 재시작 방지 (중복 메모의 핵심 해결)
+        if (!document.querySelector(LIVE_TITLE_SELECTOR + ' + .streamer-memo-container')) {
+            console.log("[치지직 메모] MutationObserver 감지됨 (시청 페이지 변화), 주기적 체크 재시작.");
+            resetInterval(); 
+        } else {
+            // 메모가 이미 삽입되어 있는 경우에도 여전히 감지되는 변화는 무시 (불필요한 로깅 줄임)
+            // console.log("[치지직 메모] MutationObserver 감지됨 (메모 이미 존재).");
+        }
     });
-    livePageObserver.observe(observeTarget, { childList: true, subtree: false, attributes: true, attributeFilter: ['class', 'style'] });
+    // 감시 옵션: childList와 attributes만 감시, subtree는 false
+    livePageObserver.observe(observeTarget, { childList: true, subtree: false, attributes: true, attributeFilter: ['class', 'style', 'id'] }); // ID 속성도 추가 감시
 
-    // 초기 실행 시에도 setInterval을 시작하고, 필요하면 applyMemoToStreamerInLivePage 직접 호출
-    resetInterval(); // 초기 인터벌 시작
-    // applyMemoToStreamerInLivePage(); // 이 초기 호출은 이제 resetInterval() 내에서 처리됨
+    // 초기 인터벌 시작
+    resetInterval(); 
 }
 
 function stopLivePageObservation() {
