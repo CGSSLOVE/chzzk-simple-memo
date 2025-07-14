@@ -2,7 +2,7 @@
   "manifest_version": 3,
   "name": "치지직 스트리머 메모",
   "version": "1.0",
-  "description": "스트리머 닉네임 옆에 랭크 등 원하는 정보를 메모하고 관리합니다.",
+  "description": 
   "permissions": [
     "storage"
   ],
